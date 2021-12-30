@@ -143,8 +143,15 @@ export class Runtime {
             tracef: this.tracef.bind(this),
         };
 
+        const wasi_snapshot_preview1 = {
+          proc_exit: (code) => {
+            this.blueScreen({stack: "", name:"proc_exit", message:"The proc has exited"});
+            return code;
+          }
+        }
+
         await this.safeCall(async () => {
-            const module = await WebAssembly.instantiate(wasmBuffer, { env });
+            const module = await WebAssembly.instantiate(wasmBuffer, { env, wasi_snapshot_preview1 });
             this.wasm = module.instance;
 
             // Call the WASI _start/_initialize function (different from WASM-4's start callback!)
